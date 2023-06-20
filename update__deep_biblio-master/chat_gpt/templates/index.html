@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>ChatGPT</title>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+
+<body>
+  <div class="chat-container">
+    <div class="chat-log" id="chat-log">
+      {% for message in messages %}
+      <div class="{{ message.sender | lower }}-message">{{ message.sender }}: {{ message.content }}</div>
+      {% endfor %}
+    </div>
+    <form id="chat-form" method="POST" action="/chat">
+      <input type="text" name="message" id="message" placeholder="Type your message" required>
+      <button type="submit" style="margin-top: 0.65rem;">Send</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('chat-form');
+    const log = document.getElementById('chat-log');
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const input = document.getElementById('message');
+      const message = input.value.trim();
+
+      if (message !== '') {
+        // Append user message to the chat log
+        const userMessage = document.createElement('div');
+        userMessage.classList.add('user-message');
+        userMessage.textContent = `You: ${message}`;
+        log.appendChild(userMessage);
+
+        // Clear the input field
+        input.value = '';
+
+        // Send the message to the server
+        fetch('/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
+          body: `message=${encodeURIComponent(message)}`
+        })
+          .then(response => response.json())
+          .then(data => {
+            // Append server response to the chat log
+            const serverMessage = document.createElement('div');
+            serverMessage.classList.add('server-message');
+            serverMessage.textContent = data.message;
+            log.appendChild(serverMessage);
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+    });
+  </script>
+</body>
+
+</html>
